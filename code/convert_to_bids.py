@@ -10,6 +10,8 @@ import mne
 from pathlib import Path
 from tqdm import tqdm
 import mne_bids
+import events_conversion
+import shutil
 from mne_bids import BIDSPath, write_raw_bids
 
 raw_files_folder = '/zi/flstorage/group_klips/data/data/Fast-Replay-MEG/'
@@ -22,7 +24,7 @@ subjects = [x for x in os.listdir(f'{raw_files_folder}/data-MEG/') if x.startswi
 print(f'{len(subjects)=} subjects found')
 
 
-for subj in tqdm(subjects):
+for subj in tqdm(sorted(subjects), desc='processing subjects'):
     subj_id = subj.split('_', 1)[-1]
     assert len(subj_id)==2
 
@@ -73,12 +75,12 @@ for subj in tqdm(subjects):
                   | {f'sequence {stim} onset':i+20 for i, stim in enumerate(stimuli, 1)}
                 )
 
-    bids_task = BIDSPath(subject=subj_id,
-                         datatype='meg',
-                         task=f'main',
-                         root=bids_root_path)
+    bids_task_main= BIDSPath(subject=subj_id,
+                             datatype='meg',
+                             task=f'main',
+                             root=bids_root_path)
     write_raw_bids(raw=raw,
-                    bids_path=bids_task,
+                    bids_path=bids_task_main,
                     events=events,
                     event_id=event_id,
                     # empty_room=raw_er,
@@ -87,7 +89,32 @@ for subj in tqdm(subjects):
                    )
 
     ### 3) behavioural data
+    # basically sourdedata is a fractal BIDS folder
+    bids_task_source = BIDSPath(subject=subj_id,
+                         datatype='beh',
+                         task=f'main',
+                         root=bids_root_path + '/sourcedata/')
+    bids_task_source.mkdir()
+
+    # filter CSV file
+    subj_folder = f'{raw_files_folder}/data-logs/{subj.replace("_", "-")}/'
+    files_subj = [x for x in os.listdir(subj_folder) if x.endswith('csv') ]
+    files_subj = [x for x in files_subj if (('main_' in x) & x.startswith(f'{int(subj_id):02d}'))]
+    files_subj = [f'{subj_folder}/{x}' for x in files_subj]
+    assert len(files_subj)==1
+    csv_file = files_subj[0]
+    log_file = files_subj[0][:-3] + 'log'
+    shutil.copy(log_file, str(bids_task_source.fpath) + '.log')
+
+    bids_task_main.update(suffix='beh')
+    df_subj = events_conversion.convert_psychopy_to_bids(csv_file)
+    df_subj['subject'] = f'sub-{subj_id}'
+    df_subj['session'] = 1
+
+    df_subj.to_csv(str(bids_task_main.fpath) + '.tsv', sep='\t', index=False,
+                   na_rep='NaN')
 
 
     ### 4) MRI data
     # I have previously run recon-all on the data
+    # TODO implement this, currently we don't use the MRI data yet
