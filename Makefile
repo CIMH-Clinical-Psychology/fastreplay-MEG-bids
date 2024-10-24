@@ -5,6 +5,9 @@ PIP = $(VENV_DIR)/bin/pip
 ACTIVATE = . $(VENV_DIR)/bin/activate
 REQUIREMENTS = requirements.txt
 HEUDICONV_VERSION = 1.3.0
+SUBJECTS = $(shell seq -w 1 30)
+USER_ID = $(shell id -u)
+GROUP_ID = $(shell id -g)
 
 .PHONY: all
 all: install
@@ -25,11 +28,12 @@ install: venv $(REQUIREMENTS)
 freeze: venv
 	$(PIP) freeze > $(REQUIREMENTS)
 
-.PHONY: anat
+
 anat:
-	docker run --rm -v $(CURDIR)/MFR-sample_raw:/input:ro -v $(CURDIR):/output:rw -v $(CURDIR)/code:/code:ro \
-	nipy/heudiconv:$(HEUDICONV_VERSION) -d /input/data-MRI/MFR{subject}/*IMA \
-	-s 01 -o /output -f code/heudiconv_heuristic.py -c dcm2niix --bids --overwrite
+	@$(foreach sub,$(SUBJECTS), \
+		docker run --rm -u $(USER_ID):$(GROUP_ID) -v $(CURDIR)/../Fast-Replay-MEG/data-MRI/:/input:ro -v $(CURDIR):/output:rw -v $(CURDIR)/code:/code:ro \
+		nipy/heudiconv:$(HEUDICONV_VERSION) -d /input/MFR{subject}/*IMA \
+		-s $(sub) -o /output -f code/heudiconv_heuristic.py -c dcm2niix --bids --overwrite;)
 
 .PHONY: defacing
 defacing:

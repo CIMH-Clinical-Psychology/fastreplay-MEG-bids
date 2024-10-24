@@ -26,6 +26,8 @@ print(f'{len(subjects)=} subjects found')
 
 for subj in tqdm(sorted(subjects), desc='processing subjects'):
     subj_id = subj.split('_', 1)[-1]
+    if int(subj_id)==23:  # this participant's data is missing
+        continue
     assert len(subj_id)==2
 
     subj_folder = f'{raw_files_folder}/data-MEG/{subj}/'
