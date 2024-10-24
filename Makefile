@@ -28,7 +28,7 @@ install: venv $(REQUIREMENTS)
 freeze: venv
 	$(PIP) freeze > $(REQUIREMENTS)
 
-
+.PHONY: anat
 anat:
 	@$(foreach sub,$(SUBJECTS), \
 		docker run --rm -u $(USER_ID):$(GROUP_ID) -v $(CURDIR)/../Fast-Replay-MEG/data-MRI/:/input:ro -v $(CURDIR):/output:rw -v $(CURDIR)/code:/code:ro \
