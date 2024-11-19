@@ -12,9 +12,9 @@ from tqdm import tqdm
 import mne_bids
 import events_conversion
 import shutil
-from mne_bids import BIDSPath, write_raw_bids
+from mne_bids import BIDSPath, write_raw_bids, write_anat
 
-raw_files_folder = '/zi/flstorage/group_klips/data/data/Fast-Replay-MEG/'
+raw_files_folder = '/data/fastreplay/Fast-Replay-MEG/'
 
 bids_root_path = os.path.abspath(os.path.dirname(vars().get('__file__', '')) + '/../')
 # bids_root = BIDSPath(root=bids_root_path)
@@ -99,7 +99,7 @@ for subj in tqdm(sorted(subjects), desc='processing subjects'):
     bids_task_source.mkdir()
 
     # filter CSV file
-    subj_folder = f'{raw_files_folder}/data-logs/{subj.replace("_", "-")}/'
+    subj_folder = f'{raw_files_folder}/data-logs/{subj.replace("_", "-").upper()}/'
     files_subj = [x for x in os.listdir(subj_folder) if x.endswith('csv') ]
     files_subj = [x for x in files_subj if (('main_' in x) & x.startswith(f'{int(subj_id):02d}'))]
     files_subj = [f'{subj_folder}/{x}' for x in files_subj]
@@ -116,7 +116,19 @@ for subj in tqdm(sorted(subjects), desc='processing subjects'):
     df_subj.to_csv(str(bids_task_main.fpath) + '.tsv', sep='\t', index=False,
                    na_rep='NaN')
 
+    # asd
+    # ### 4) MRI data
+    #### MRI DATA IS ALREADY CONVERTED VIA HEUDICONV
+    # t1w_path = BIDSPath(subject=subj_id,
+    #                     datatype='anat',
+    #                     # task=f'T1w',
+    #                     root=bids_root_path)
 
-    ### 4) MRI data
-    # I have previously run recon-all on the data
-    # TODO implement this, currently we don't use the MRI data yet
+    # t1w_bids_path = write_anat(
+    #     image='/data/fastreplay/Fast-Replay-MEG-bids/sub-01/anat/sub-02_T1w.nii.gz',  # path to the MRI scan
+    #     bids_path=t1w_path,
+    #     landmarks=None,
+    #     deface=False,
+    #     overwrite=True,
+    #     verbose=True,  # this will print out the sidecar file
+    # )
