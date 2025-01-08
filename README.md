@@ -10,6 +10,8 @@ make anat
 
 make defacing
 
+python code/fix_files.py
+
 python code/convert_to_bids.py
 ```
 
