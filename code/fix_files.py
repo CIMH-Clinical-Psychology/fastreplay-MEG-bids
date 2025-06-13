@@ -17,6 +17,14 @@ import numpy as np
 import meg_utils
 
 
+def reset_backups():
+    """restore the backups, just in case"""
+    import ospath  # this is a custom module
+    files = ospath.list_files(f'{raw_files_folder}/data-MEG/', exts='bak', recursive=True)
+    for bak_file in files:
+        fif_file = bak_file[:-3] + 'fif'
+        os.remove(fif_file)
+        shutil.move(bak_file, fif_file)
 
 def fix_file(raw):
     fif_file =raw._filenames[0]

@@ -54,7 +54,7 @@ for subj in tqdm(sorted(subjects), desc='processing subjects'):
                         )
 
     ### 2) next convert the main data
-    fif_file = [x for x in files_subj if f'_main_' in x and x.endswith('mc.fif')]
+    fif_file = [x for x in files_subj if f'_main_' in x and x.endswith('.fif') and 'tsss' in x and not '-1.' in x]
     assert len(fif_file)==1
     raw = mne.io.read_raw_fif(f'{subj_folder}/{fif_file[0]}')
     events = mne.find_events(raw, min_duration=3/raw.info['sfreq'])
@@ -106,7 +106,7 @@ for subj in tqdm(sorted(subjects), desc='processing subjects'):
     log_file = files_subj[0][:-3] + 'log'
     shutil.copy(log_file, str(bids_task_source.fpath) + '.log')
 
-    bids_task_main.update(suffix='beh')
+    bids_task_main.update(datatype='beh', suffix='beh')
     df_subj = events_conversion.convert_psychopy_to_bids(csv_file)
     df_subj['subject'] = f'sub-{subj_id}'
     df_subj['session'] = 1
