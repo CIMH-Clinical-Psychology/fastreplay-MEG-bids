@@ -11,7 +11,7 @@ def create_key(template, outtype=('nii.gz',), annotation_classes=None):
 def infotodict(seqinfo):
 
     # paths in BIDS format
-    anat = create_key('sub-{subject}/anat/sub-{subject}_T1w')
+    anat = create_key('sub-{subject}/anat/sub-{subject}_T1w_orig')
     info = {anat: []}
 
     for s in seqinfo:
