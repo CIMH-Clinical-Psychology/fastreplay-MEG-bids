@@ -3,7 +3,7 @@ BIDS dataset for the MEG replication of Wittkuhn et al 2021
 
 If you have the raw data, you can run the following command to convert them to BIDS. Beforehand you might need to edit paths in the Makefile and in convert_to_bids.py.
 
-It is assumed that the raw data is in `../Fast-Replay-MEG/*`
+It is assumed that the raw data is in `../highspeed-MEG-raw/*`
 
 ```bash
 make anat
