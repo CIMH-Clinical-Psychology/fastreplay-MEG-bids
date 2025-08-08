@@ -13,7 +13,6 @@ from joblib import load as _joblib_load
 
 joblib_load = cache(_joblib_load)
 
-@profile
 def check_and_fix_channels(raw):
     """check for missing channels or empty channels or NaN channels"""
     report = {'filename': os.path.basename(raw._filenames[0]),

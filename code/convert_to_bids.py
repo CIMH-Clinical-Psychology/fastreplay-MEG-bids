@@ -26,6 +26,7 @@ bids_root_path = os.path.abspath(os.path.dirname(vars().get('__file__', '')) + '
 subjects = [x for x in os.listdir(f'{raw_files_folder}/data-MEG/') if x.startswith('mfr')]
 print(f'{len(subjects)=} subjects found')
 
+#%% convert to BIDS
 reports = []
 for subj in tqdm(sorted(subjects), desc='processing subjects'):
 # with ContextProfiler():
@@ -144,3 +145,13 @@ for subj in tqdm(sorted(subjects), desc='processing subjects'):
     #     overwrite=True,
     #     verbose=True,  # this will print out the sidecar file
     # )
+
+#%%  copy emptyroom data
+empty_fifs = os.listdir(raw_files_folder + '/data-empty-room/')
+for fif_file in tqdm(empty_fifs, desc='writing empty rooms'):
+    raw = mne.io.read_raw(raw_files_folder + '/data-empty-room/' +  fif_file, verbose='ERROR')
+    er_date = fif_file.split('_')[1]
+    er_bids_path = BIDSPath(
+        subject="emptyroom", session=er_date, task="noise", root=bids_root_path
+    )
+    write_raw_bids(raw, er_bids_path, overwrite=True)
