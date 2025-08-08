@@ -13,8 +13,11 @@ import mne_bids
 import events_conversion
 import shutil
 from mne_bids import BIDSPath, write_raw_bids, write_anat
-
-raw_files_folder = '/data/fastreplay/Fast-Replay-MEG/'
+import misc
+import stimer
+from stimer import ContextProfiler
+# change this to the raw file folder
+raw_files_folder = '/zi/flstorage/group_klips/data/data/Simon/highspeed/highspeed-MEG-raw/'
 
 bids_root_path = os.path.abspath(os.path.dirname(vars().get('__file__', '')) + '/../')
 # bids_root = BIDSPath(root=bids_root_path)
@@ -23,8 +26,9 @@ bids_root_path = os.path.abspath(os.path.dirname(vars().get('__file__', '')) + '
 subjects = [x for x in os.listdir(f'{raw_files_folder}/data-MEG/') if x.startswith('mfr')]
 print(f'{len(subjects)=} subjects found')
 
-
+reports = []
 for subj in tqdm(sorted(subjects), desc='processing subjects'):
+# with ContextProfiler():
     subj_id = subj.split('_', 1)[-1]
     assert len(subj_id)==2
 
@@ -37,6 +41,7 @@ for subj in tqdm(sorted(subjects), desc='processing subjects'):
         fif_file = [x for x in files_subj if f'_rs{rs}_' in x]
         assert len(fif_file)==1
         raw = mne.io.read_raw_fif(f'{subj_folder}/{fif_file[0]}')
+        raw, report = misc.check_and_fix_channels(raw)
         events = mne.find_events(raw, min_duration=3/raw.info['sfreq'])
         event_id = {'resting state start': 1, 'resting state stop': 2}
         bids_task = BIDSPath(subject=subj_id,
@@ -45,18 +50,24 @@ for subj in tqdm(sorted(subjects), desc='processing subjects'):
                              root=bids_root_path)
 
         write_raw_bids(raw=raw,
-                        bids_path=bids_task,
-                        events=events,
-                        event_id=event_id,
-                        # empty_room=raw_er,
-                        overwrite=True,
-                        verbose=True
-                        )
+                       allow_preload = True,
+                       bids_path=bids_task,
+                       events=events,
+                       event_id=event_id,
+                       format='FIF',
+                       # empty_room=raw_er,
+                       overwrite=True,
+                       verbose=True
+                       )
+        reports += [report]
 
     ### 2) next convert the main data
     fif_file = [x for x in files_subj if f'_main_' in x and x.endswith('.fif') and 'tsss' in x and not '-1.' in x]
     assert len(fif_file)==1
     raw = mne.io.read_raw_fif(f'{subj_folder}/{fif_file[0]}')
+    raw, report = misc.check_and_fix_channels(raw)
+    reports += [report]
+
     events = mne.find_events(raw, min_duration=3/raw.info['sfreq'])
     stimuli = ['Face', 'House', 'Cat', 'Shoe', 'Chair']
     event_id = ({'Break start': 91,
@@ -81,12 +92,15 @@ for subj in tqdm(sorted(subjects), desc='processing subjects'):
                              root=bids_root_path)
     write_raw_bids(raw=raw,
                     bids_path=bids_task_main,
+                    allow_preload = True,
                     events=events,
                     event_id=event_id,
+                    format='FIF',
                     # empty_room=raw_er,
                     overwrite=True,
                     verbose=True
                    )
+
 
     ### 3) behavioural data
     # basically sourdedata is a fractal BIDS folder
