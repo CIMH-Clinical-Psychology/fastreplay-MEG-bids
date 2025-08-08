@@ -122,6 +122,7 @@ for subj in tqdm(sorted(subjects), desc='processing subjects'):
     shutil.copy(log_file, str(bids_task_source.fpath) + '.log')
 
     bids_task_main.update(datatype='beh', suffix='beh')
+    bids_task_main.mkdir()
     df_subj = events_conversion.convert_psychopy_to_bids(csv_file)
     df_subj['subject'] = f'sub-{subj_id}'
     df_subj['session'] = 1
